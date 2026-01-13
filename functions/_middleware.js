@@ -5,7 +5,7 @@ export async function onRequest(context) {
   if (url.pathname === "/") {
     const group = Math.random() < 0.5 ? "a" : "b";
 
-    return fetch(new URL(`/${group}`, request.url), request);
+    return fetch(new URL(`/::${group}::1`, request.url), request);
   }
 
   return context.next();
