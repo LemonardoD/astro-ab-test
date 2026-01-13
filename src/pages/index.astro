@@ -1,0 +1,13 @@
+<div id='ab-content'></div>
+<script is:inline type='module'>
+  // Pick a variant randomly
+  const variant = Math.random() < 0.5 ? "a" : "b";
+
+  // Fetch the correct HTML variant
+
+  fetch(`index_${variant}_.html`)
+    .then((res) => res.text())
+    .then((html) => {
+      document.getElementById("ab-content").innerHTML = html;
+    });
+</script>

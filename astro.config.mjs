@@ -9,10 +9,10 @@ export default defineConfig({
   integrations: [
     sitemap({
       serialize: (item) => {
-        // Exclude variant pages from sitemap
-        // if (item.url.includes("::")) {
-        //   return undefined;
-        // }
+        // Exclude pages like _a_ or _b_ from sitemap
+        if (/\/_[a-zA-Z]_/.test(item.url)) {
+          return undefined;
+        }
         return item;
       }
     })
