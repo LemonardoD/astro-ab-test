@@ -11,9 +11,9 @@ export default defineConfig({
     sitemap({
       serialize: (item) => {
         // Exclude variant pages from sitemap
-        if (item.url.includes("::")) {
-          return undefined;
-        }
+        // if (item.url.includes("::")) {
+        //   return undefined;
+        // }
         return item;
       }
     })
