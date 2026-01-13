@@ -5,7 +5,7 @@
 
   // Fetch the correct HTML variant
 
-  fetch(`index_${variant}_.html`)
+   fetch(`index_${variant}_/index.html`)
     .then((res) => res.text())
     .then((html) => {
       document.getElementById("ab-content").innerHTML = html;
