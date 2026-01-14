@@ -21,14 +21,39 @@ const { experiment } = Astro.props;
 </html>
 
 <script is:inline>
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+  }
+
   const experiment = document.documentElement.dataset.experiment;
   if (experiment !== undefined) {
-    const urlParams = new URLSearchParams(window.location.search);
-    let variant = urlParams.get("variant") || Math.random() < 0.5 ? "a" : "b";
+    const elements = document.querySelectorAll(`[data-experiment^="${experiment}:"]`);
+    if (elements.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search);
+      let variant = urlParams.get("variant");
+      let shouldAddMeta = !!variant;
 
-    document.head.insertAdjacentHTML("beforeend", `<meta name="experiment" content="${experiment}:${variant}">`);
+      if (!variant) {
+        const cookieName = `experiment-${experiment}`;
+        variant = getCookie(cookieName);
+        if (variant) {
+          shouldAddMeta = true;
+        } else {
+          const variants = Array.from(elements)
+            .map((el) => el.dataset.experiment.split(":")[1])
+            .sort();
+          variant = variants[0];
+        }
+      }
 
-    const component = document.querySelector(`[data-experiment="${experiment}:${variant}"]`);
-    if (component) component.hidden = false;
+      if (shouldAddMeta) {
+        document.head.insertAdjacentHTML("beforeend", `<meta name="experiment" content="${experiment}:${variant}">`);
+      }
+
+      const component = document.querySelector(`[data-experiment="${experiment}:${variant}"]`);
+      if (component) component.hidden = false;
+    }
   }
 </script>
