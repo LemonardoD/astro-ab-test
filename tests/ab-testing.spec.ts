@@ -1,13 +1,13 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('A/B Testing Scenarios', () => {
+test.describe("A/B Testing Scenarios", () => {
   test.beforeEach(async ({ page }) => {
     // Clear cookies before each test
     await page.context().clearCookies();
   });
 
-  test('No cookie, no query - show first variants, no meta', async ({ page }) => {
-    await page.goto('/about');
+  test("No cookie, no query - show first variants, no meta", async ({ page }) => {
+    await page.goto("/about");
     await expect(page.locator('[data-experiment="pricing:a"]')).toBeVisible();
     await expect(page.locator('[data-experiment="pricing:b"]')).toBeHidden();
     await expect(page.locator('[data-experiment="cta:x"]')).toBeVisible();
@@ -15,12 +15,12 @@ test.describe('A/B Testing Scenarios', () => {
     await expect(page.locator('meta[name="experiment"]')).toHaveCount(0);
   });
 
-  test('With cookies - show cookie variants, add meta', async ({ page }) => {
+  test("With cookies - show cookie variants, add meta", async ({ page }) => {
     await page.context().addCookies([
-      { name: 'experiment-pricing', value: 'b', url: 'http://localhost:4321' },
-      { name: 'experiment-cta', value: 'y', url: 'http://localhost:4321' }
+      { name: "experiment-pricing", value: "b", url: "http://localhost:4321" },
+      { name: "experiment-cta", value: "y", url: "http://localhost:4321" }
     ]);
-    await page.goto('/about');
+    await page.goto("/about");
     await expect(page.locator('[data-experiment="pricing:b"]')).toBeVisible();
     await expect(page.locator('[data-experiment="pricing:a"]')).toBeHidden();
     await expect(page.locator('[data-experiment="cta:y"]')).toBeVisible();
@@ -29,8 +29,8 @@ test.describe('A/B Testing Scenarios', () => {
     await expect(page.locator('meta[name="experiment"][content="cta:y"]')).toHaveCount(1);
   });
 
-  test('With query - show query variants, add meta', async ({ page }) => {
-    await page.goto('/about?experiment=pricing:b,cta:y');
+  test("With query - show query variants, add meta", async ({ page }) => {
+    await page.goto("/about?experiment=pricing:b,cta:y");
     await expect(page.locator('[data-experiment="pricing:b"]')).toBeVisible();
     await expect(page.locator('[data-experiment="pricing:a"]')).toBeHidden();
     await expect(page.locator('[data-experiment="cta:y"]')).toBeVisible();
@@ -39,41 +39,41 @@ test.describe('A/B Testing Scenarios', () => {
     await expect(page.locator('meta[name="experiment"][content="cta:y"]')).toHaveCount(1);
   });
 
-  test('Query overwrites cookie', async ({ page }) => {
+  test("Query overwrites cookie", async ({ page }) => {
     await page.context().addCookies([
-      { name: 'experiment-pricing', value: 'a', url: 'http://localhost:4321' },
-      { name: 'experiment-cta', value: 'x', url: 'http://localhost:4321' }
+      { name: "experiment-pricing", value: "a", url: "http://localhost:4321" },
+      { name: "experiment-cta", value: "x", url: "http://localhost:4321" }
     ]);
-    await page.goto('/about?experiment=pricing:b,cta:y');
+    await page.goto("/about?experiment=pricing:b,cta:y");
     await expect(page.locator('[data-experiment="pricing:b"]')).toBeVisible();
     await expect(page.locator('[data-experiment="cta:y"]')).toBeVisible();
     await expect(page.locator('meta[name="experiment"][content="pricing:b"]')).toHaveCount(1);
     await expect(page.locator('meta[name="experiment"][content="cta:y"]')).toHaveCount(1);
   });
 
-  test('Wrong variant in query - ignore, show first', async ({ page }) => {
-    await page.goto('/about?experiment=pricing:z,cta:w');
+  test("Wrong variant in query - ignore, show first", async ({ page }) => {
+    await page.goto("/about?experiment=pricing:z,cta:w");
     await expect(page.locator('[data-experiment="pricing:a"]')).toBeVisible();
     await expect(page.locator('[data-experiment="cta:x"]')).toBeVisible();
     await expect(page.locator('meta[name="experiment"]')).toHaveCount(0);
   });
 
-  test('Wrong variant in cookie - ignore cookie, show first', async ({ page }) => {
+  test("Wrong variant in cookie - ignore cookie, show first", async ({ page }) => {
     await page.context().addCookies([
-      { name: 'experiment-pricing', value: 'z', url: 'http://localhost:4321' },
-      { name: 'experiment-cta', value: 'w', url: 'http://localhost:4321' }
+      { name: "experiment-pricing", value: "z", url: "http://localhost:4321" },
+      { name: "experiment-cta", value: "w", url: "http://localhost:4321" }
     ]);
-    await page.goto('/about');
+    await page.goto("/about");
     await expect(page.locator('[data-experiment="pricing:a"]')).toBeVisible();
     await expect(page.locator('[data-experiment="cta:x"]')).toBeVisible();
     await expect(page.locator('meta[name="experiment"]')).toHaveCount(0);
   });
 
-  test('Partial query - only specified experiments', async ({ page }) => {
-    await page.goto('/about?experiment=pricing:b');
+  test("Partial query - only specified experiments", async ({ page }) => {
+    await page.goto("/about?experiment=pricing:b");
     await expect(page.locator('[data-experiment="pricing:b"]')).toBeVisible();
     await expect(page.locator('[data-experiment="cta:x"]')).toBeVisible(); // first for cta
-    await expect(page.locator('meta[name="experiment"][content="pricing:b"]')).toBeTruthy();
+    expect(page.locator('meta[name="experiment"][content="pricing:b"]')).toBeTruthy();
     await expect(page.locator('meta[name="experiment"][content="cta:x"]')).toHaveCount(0); // no meta for default
   });
 });
