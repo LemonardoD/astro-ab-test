@@ -1,0 +1,34 @@
+---
+export interface Props {
+  experiment?: string;
+}
+
+const { experiment } = Astro.props;
+---
+
+<html
+  lang='en'
+  data-experiment={experiment}
+>
+  <head>
+    <meta charset='utf-8' />
+    <title>A/B Testing</title>
+    <slot name='head' />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<script is:inline>
+  const experiment = document.documentElement.dataset.experiment;
+  if (experiment !== undefined) {
+    const urlParams = new URLSearchParams(window.location.search);
+    let variant = urlParams.get("variant") || Math.random() < 0.5 ? "a" : "b";
+
+    document.head.insertAdjacentHTML("beforeend", `<meta name="experiment" content="${experiment}:${variant}">`);
+
+    const component = document.querySelector(`[data-experiment="${experiment}:${variant}"]`);
+    if (component) component.hidden = false;
+  }
+</script>

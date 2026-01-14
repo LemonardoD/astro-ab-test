@@ -1,25 +1,10 @@
 ---
-import ABSwitch from "../components/ABSwitch.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
 import HomeA from "../components/HomeA.astro";
 import HomeB from "../components/HomeB.astro";
-
-const url = new URL(Astro.request.url);
-const group = url.searchParams.get("group") || Math.random() < 0.5 ? "a" : "b";
-
-Astro.response.headers.set("X-AB-Variant", group);
 ---
 
-<html lang='en'>
-  <head>
-    <meta charset='utf-8' />
-    <title>A/B Testing</title>
-  </head>
-  <body>
-    <ABSwitch
-      groups={[
-        { group: "a", component: HomeA },
-        { group: "b", component: HomeB }
-      ]}
-    />
-  </body>
-</html>
+<BaseLayout experiment='landing'>
+  <HomeA />
+  <HomeB />
+</BaseLayout>
