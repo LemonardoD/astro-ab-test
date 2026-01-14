@@ -35,25 +35,29 @@
   }
 
   experiments.forEach((experiment) => {
-    const elements = document.querySelectorAll('[data-experiment^="' + experiment + ':"]');
+    const elements = document.querySelectorAll(`[data-experiment^="${experiment}:"]`);
     if (elements.length > 0) {
+      const availableVariants = Array.from(elements).map((el) => el.dataset.experiment.split(":")[1]);
       let variant = urlVariants[experiment];
+      if (variant && !availableVariants.includes(variant)) {
+        variant = null;
+      }
       let shouldAddMeta = !!variant;
 
       if (!variant) {
-        variant = getCookie(experiment);
-        if (variant) {
+        const cookieVariant = getCookie(experiment);
+        if (cookieVariant && availableVariants.includes(cookieVariant)) {
+          variant = cookieVariant;
           shouldAddMeta = true;
         } else {
-          const variants = Array.from(elements).map((el) => el.dataset.experiment.split(":")[1]);
-          variant = variants[0];
+          variant = availableVariants[0];
         }
       }
 
       if (shouldAddMeta) {
         const meta = document.createElement("meta");
         meta.name = "experiment";
-        meta.content = experiment + ":" + variant;
+        meta.content = `${experiment}:${variant}`;
         document.head.appendChild(meta);
       }
 
