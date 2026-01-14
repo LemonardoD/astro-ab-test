@@ -1,0 +1,13 @@
+---
+interface Props {
+  experiment: string;
+}
+const { experiment } = Astro.props;
+---
+
+<div
+  hidden
+  data-experiment={experiment}
+>
+  <slot />
+</div>

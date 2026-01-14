@@ -1,5 +1,6 @@
 ---
 import { multilang } from "../i18n/pages";
+import Experiment from "./Experiment.astro";
 
 interface Props {
   t: ReturnType<typeof multilang.$use>;
@@ -8,10 +9,7 @@ interface Props {
 const { t } = Astro.props;
 ---
 
-<div
-  hidden
-  data-experiment='lang:one'
->
+<Experiment experiment='lang:one'>
   <h2>{t.sub_title()}</h2>
   <p>{t.sub_text()}</p>
-</div>
+</Experiment>
