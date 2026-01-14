@@ -2,20 +2,20 @@
 import type { AstroComponentFactory } from "astro/runtime/server/render/index.js";
 
 interface Props {
-  variants: {
-    value: string;
+  groups: {
+    group: string;
     component: AstroComponentFactory;
   }[];
 }
 
-const { variants } = Astro.props;
+const { groups } = Astro.props;
 ---
 
 <div id='ab-container'>
   {
-    variants.map(({ value, component: Component }) => (
+    groups.map(({ group, component: Component }) => (
       <div
-        id={`variant-${value}`}
+        id={`group-${group}`}
         hidden
       >
         <Component />
@@ -32,6 +32,6 @@ const { variants } = Astro.props;
     group = Math.random() < 0.5 ? "a" : "b";
   }
 
-  const component = document.getElementById(`variant-${group}`);
+  const component = document.getElementById(`group-${group}`);
   if (component) component.hidden = false;
 </script>
