@@ -14,6 +14,9 @@ importers:
       '@astrojs/sitemap':
         specifier: ^3.6.1
         version: 3.6.1
+      '@strukturaio/tracker':
+        specifier: ^0.0.3
+        version: 0.0.3
       astro:
         specifier: ^5.16.9
         version: 5.16.9(rollup@4.55.1)(typescript@5.9.3)(yaml@2.8.2)
@@ -268,6 +271,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fingerprintjs/fingerprintjs-pro@3.12.6':
+    resolution: {integrity: sha512-DX7qqR4XNHKIqMwttOIi7piBpR/tQaSGGJfGqzlaJsSG+Ni4JWpBeVabVZiCz+H4vvdEN1v7PBGY7+LVFmL6TQ==}
 
   '@img/colour@1.0.0':
     resolution: {integrity: sha512-A5P/LfWGFSl6nsckYtjw9da+19jB8hkJ6ACTGcDfEJ0aE+l2n2El7dsVM7UVHZQ9s2lmYMWlrS21YLy2IR1LUw==}
@@ -583,6 +589,9 @@ packages:
 
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
+
+  '@strukturaio/tracker@0.0.3':
+    resolution: {integrity: sha512-3OtWzGkgdqac+rE6vUipJMbygphGY8EjJQMlHRfU7A57KUwKb5MIPyyvoProbF6+3F+wbOJ2pBjyYAtniXyhJA==, tarball: https://npm.pkg.github.com/download/@strukturaio/tracker/0.0.3/3678444e15fa2e3a0f5f1fc8ffa1b45c515dd06d}
 
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
@@ -2092,6 +2101,8 @@ snapshots:
   '@esbuild/win32-x64@0.25.12':
     optional: true
 
+  '@fingerprintjs/fingerprintjs-pro@3.12.6': {}
+
   '@img/colour@1.0.0':
     optional: true
 
@@ -2324,6 +2335,10 @@ snapshots:
       '@types/hast': 3.0.4
 
   '@shikijs/vscode-textmate@10.0.2': {}
+
+  '@strukturaio/tracker@0.0.3':
+    dependencies:
+      '@fingerprintjs/fingerprintjs-pro': 3.12.6
 
   '@types/debug@4.1.12':
     dependencies:
