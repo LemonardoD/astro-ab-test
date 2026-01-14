@@ -1,15 +1,4 @@
----
-export interface Props {
-  experiment?: string;
-}
-
-const { experiment } = Astro.props;
----
-
-<html
-  lang='en'
-  data-experiment={experiment}
->
+<html lang='en'>
   <head>
     <meta charset='utf-8' />
     <title>A/B Testing</title>
@@ -21,39 +10,55 @@ const { experiment } = Astro.props;
 </html>
 
 <script is:inline>
-  function getCookie(name) {
+  const getCookie = (experimentName) => {
     const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
+    const parts = value.split(`; ${`experiment-${experimentName}`}=`);
     if (parts.length === 2) return parts.pop().split(";").shift();
+  };
+
+  const allElements = document.querySelectorAll("[data-experiment]");
+  const experiments = [...new Set(Array.from(allElements).map((el) => el.dataset.experiment.split(":")[0]))];
+
+  const urlParams = new URLSearchParams(window.location.search);
+
+  const experimentParam = urlParams.get("experiment");
+  const urlVariants = {};
+  if (experimentParam) {
+    const pairs = experimentParam.split(",");
+    for (const pair of pairs) {
+      const trimmed = pair.trim();
+      const parts = trimmed.split(":");
+      if (parts.length !== 2) continue;
+
+      urlVariants[parts[0].trim()] = parts[1].trim();
+    }
   }
 
-  const experiment = document.documentElement.dataset.experiment;
-  if (experiment !== undefined) {
-    const elements = document.querySelectorAll(`[data-experiment^="${experiment}:"]`);
+  experiments.forEach((experiment) => {
+    const elements = document.querySelectorAll('[data-experiment^="' + experiment + ':"]');
     if (elements.length > 0) {
-      const urlParams = new URLSearchParams(window.location.search);
-      let variant = urlParams.get("variant");
+      let variant = urlVariants[experiment];
       let shouldAddMeta = !!variant;
 
       if (!variant) {
-        const cookieName = `experiment-${experiment}`;
-        variant = getCookie(cookieName);
+        variant = getCookie(experiment);
         if (variant) {
           shouldAddMeta = true;
         } else {
-          const variants = Array.from(elements)
-            .map((el) => el.dataset.experiment.split(":")[1])
-            .sort();
+          const variants = Array.from(elements).map((el) => el.dataset.experiment.split(":")[1]);
           variant = variants[0];
         }
       }
 
       if (shouldAddMeta) {
-        document.head.insertAdjacentHTML("beforeend", `<meta name="experiment" content="${experiment}:${variant}">`);
+        const meta = document.createElement("meta");
+        meta.name = "experiment";
+        meta.content = experiment + ":" + variant;
+        document.head.appendChild(meta);
       }
 
       const component = document.querySelector(`[data-experiment="${experiment}:${variant}"]`);
       if (component) component.hidden = false;
     }
-  }
+  });
 </script>
