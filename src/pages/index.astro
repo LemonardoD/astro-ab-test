@@ -1,13 +1,20 @@
-<div id='ab-content'></div>
-<script is:inline type='module'>
-  // Pick a variant randomly
-  const variant = Math.random() < 0.5 ? "a" : "b";
+---
+import ABSwitch from "../components/ABSwitch.astro";
+import HomeA from "../components/HomeA.astro";
+import HomeB from "../components/HomeB.astro";
+---
 
-  // Fetch the correct HTML variant
-
-   fetch(`index_${variant}_/index.html`)
-    .then((res) => res.text())
-    .then((html) => {
-      document.getElementById("ab-content").innerHTML = html;
-    });
-</script>
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <title>A/B Testing</title>
+  </head>
+  <body>
+    <ABSwitch
+      variants={[
+        { value: "a", component: HomeA },
+        { value: "b", component: HomeB }
+      ]}
+    />
+  </body>
+</html>

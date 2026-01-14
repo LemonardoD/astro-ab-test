@@ -8,13 +8,7 @@ export default defineConfig({
   site: "https://example.com", // Replace with your actual site URL
   integrations: [
     sitemap({
-      serialize: (item) => {
-        // Exclude pages like _a_ or _b_ from sitemap
-        if (/\/_[a-zA-Z]_/.test(item.url)) {
-          return undefined;
-        }
-        return item;
-      }
+      serialize: (item) => item
     })
   ]
 });

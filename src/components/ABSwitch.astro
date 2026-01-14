@@ -1,0 +1,37 @@
+---
+import type { AstroComponentFactory } from "astro/runtime/server/render/index.js";
+
+interface Props {
+  variants: {
+    value: string;
+    component: AstroComponentFactory;
+  }[];
+}
+
+const { variants } = Astro.props;
+---
+
+<div id='ab-container'>
+  {
+    variants.map(({ value, component: Component }) => (
+      <div
+        id={`variant-${value}`}
+        hidden
+      >
+        <Component />
+      </div>
+    ))
+  }
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  let group = urlParams.get("group");
+
+  if (!group) {
+    group = Math.random() < 0.5 ? "a" : "b";
+  }
+
+  const component = document.getElementById(`variant-${group}`);
+  if (component) component.hidden = false;
+</script>
