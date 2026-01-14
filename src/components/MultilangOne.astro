@@ -1,0 +1,17 @@
+---
+import { multilang } from "../i18n/pages";
+
+interface Props {
+  t: ReturnType<typeof multilang.$use>;
+}
+
+const { t } = Astro.props;
+---
+
+<div
+  hidden
+  data-experiment='lang:one'
+>
+  <h2>{t.sub_title()}</h2>
+  <p>{t.sub_text()}</p>
+</div>

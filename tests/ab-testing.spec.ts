@@ -76,4 +76,22 @@ test.describe("A/B Testing Scenarios", () => {
     expect(page.locator('meta[name="experiment"][content="pricing:b"]')).toBeTruthy();
     await expect(page.locator('meta[name="experiment"][content="cta:x"]')).toHaveCount(0); // no meta for default
   });
+
+  test("Dictionary variant one - with de", async ({ page }) => {
+    await page.goto("/de/multilang?experiment=lang:one");
+    await expect(page.locator('[data-experiment="lang:one"]')).toBeVisible();
+    await expect(page.locator('[data-experiment="lang:two"]')).toBeHidden();
+    await expect(page.locator("h2").getByText("Sprachoptionen")).toBeVisible();
+    await expect(page.locator("p").getByText("Viele")).toBeVisible();
+    expect(page.locator('meta[name="experiment"][content="lang:one"]')).toBeTruthy();
+  });
+
+  test("Dictionary variant two - with de", async ({ page }) => {
+    await page.goto("/de/multilang?experiment=lang:two");
+    await expect(page.locator('[data-experiment="lang:two"]')).toBeVisible();
+    await expect(page.locator('[data-experiment="lang:one"]')).toBeHidden();
+    await expect(page.locator("h2").getByText("New text")).toBeVisible();
+    await expect(page.locator("p").getByText("Completly different text")).toBeVisible();
+    expect(page.locator('meta[name="experiment"][content="lang:two"]')).toBeTruthy();
+  });
 });

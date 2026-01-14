@@ -1,0 +1,17 @@
+---
+import type { multilangVariantB } from "../i18n/pages";
+
+interface Props {
+  t: ReturnType<typeof multilangVariantB.$use>;
+}
+
+const { t } = Astro.props;
+---
+
+<div
+  hidden
+  data-experiment='lang:two'
+>
+  <h2>{t.title()}</h2>
+  <p>{t.text()}</p>
+</div>

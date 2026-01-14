@@ -1,0 +1,19 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import MultilangOne from "../../components/MultilangOne.astro";
+import MultilangTwo from "../../components/MultilangTwo.astro";
+import { multilang, multilangVariantB } from "../../i18n/pages";
+
+export const getStaticPaths = multilang.staticPaths;
+const { t } = multilang.use(Astro);
+
+const secondT = multilangVariantB.$use("en");
+---
+
+<BaseLayout>
+  <h1>{t.title()}</h1>
+  <p>{t.text()}</p>
+
+  <MultilangOne t={t} />
+  <MultilangTwo t={secondT} />
+</BaseLayout>
