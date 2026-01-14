@@ -9,7 +9,7 @@
   </body>
 </html>
 
-<script is:inline>
+<script is:inline defer>
   const getCookie = (experimentName) => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${`experiment-${experimentName}`}=`);
