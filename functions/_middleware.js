@@ -1,23 +1,38 @@
 export async function onRequest(context) {
   const { request, env } = context;
 
-  const experiments = (await env.EXPERIMENTS.get("experiments")) ? JSON.parse(await env.EXPERIMENTS.get("experiments")) : [];
-
-  let response = await context.next();
-  if (!experiments.length) return response;
-
-  response = new Response(response.body, response);
-
-  // Check and update experiments cookie if needed
-  const expString = experiments.join(",");
-  const currentCookie = request.headers.get("cookie");
-  const existingExp = currentCookie
-    ?.split(";")
-    .find((c) => c.trim().startsWith("experiments="))
-    ?.split("=")[1];
-  if (existingExp !== expString) {
-    response.headers.append("Set-Cookie", `experiments=${expString}; Path=/;`);
+  // 1. List keys (names only)
+  const { keys } = await env.EXPERIMENTS.list();
+  if (!keys.length) {
+    return context.next();
   }
 
-  return response;
+  const keyNames = keys.map((k) => k.name);
+
+  // 2. Fetch all values in ONE call
+  const valuesMap = await env.EXPERIMENTS.get(keyNames);
+
+  // 3. Build key:value,key:value
+  const kvString = Array.from(valuesMap.entries())
+    .filter(([, value]) => value !== null)
+    .map(([key, value]) => `${key}:${value}`)
+    .join(",");
+
+  if (!kvString) {
+    return context.next();
+  }
+
+  // 4. Continue request
+  const response = await context.next();
+  const newResponse = new Response(response.body, response);
+
+  // 5. Only set cookie if changed
+  const cookieHeader = request.headers.get("Cookie") ?? "";
+  const hasCookie = cookieHeader.includes(`experiments=${kvString}`);
+
+  if (!hasCookie) {
+    newResponse.headers.append("Set-Cookie", `experiments=${kvString}; Path=/; SameSite=Lax`);
+  }
+
+  return newResponse;
 }
