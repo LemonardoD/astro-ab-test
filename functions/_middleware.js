@@ -20,7 +20,7 @@ export async function onRequest(context) {
     .find((c) => c.trim().startsWith("experiments="))
     ?.split("=")[1];
   if (existingExp !== expString) {
-    response.headers.append("Set-Cookie", `experiments=${expString}; Path=/; HttpOnly=false`);
+    response.headers.append("Set-Cookie", `experiments=${expString}; Path=/`);
   }
 
   return response;
