@@ -1,14 +1,12 @@
 export async function onRequest(context) {
   const { request } = context;
 
-  // Hardcoded global experiments
-  const experiments = ["landing:a", "cta:y"];
-
   // Uncomment below for KV-based experiments
-  // const experiments = await EXPERIMENTS.get('experiments') ? JSON.parse(await EXPERIMENTS.get('experiments')) : [];
+  const experiments = (await env.EXPERIMENTS.get("experiments")) ? JSON.parse(await env.EXPERIMENTS.get("experiments")) : [];
 
   let response = await context.next();
 
+  if (!experiments.lenght) return response;
   // Clone response to modify headers
   response = new Response(response.body, response);
 
