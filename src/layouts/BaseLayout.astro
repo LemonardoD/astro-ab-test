@@ -23,6 +23,7 @@
 <script is:inline defer>
   const getCookieVariants = () => {
     const value = `; ${document.cookie}`;
+    console.log("🚀 ~ getCookieVariants ~ ocument.cookie:", document.cookie);
     const parts = value.split(`; experiments=`);
     console.log("🚀 ~ getCookieVariants ~ parts:", parts);
     if (parts.length === 2) {
