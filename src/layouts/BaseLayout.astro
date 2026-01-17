@@ -73,6 +73,7 @@
       if (!variant) {
         // No URL variant, check cookie
         const cookieVariant = cookieVariants[experiment];
+        console.log("🚀 ~ cookieVariant:", cookieVariant);
         if (cookieVariant && availableVariants.includes(cookieVariant)) {
           variant = cookieVariant;
           shouldAddMeta = true;
