@@ -1,7 +1,6 @@
 export async function onRequest(context) {
   const { request, env } = context;
-  console.log("🚀 ~ onRequest ~ env.EXPERIMENTS:", env.EXPERIMENTS);
-  console.log(`🚀 ~ onRequest ~ env.EXPERIMENTS.get("experiments"):`, env.EXPERIMENTS.get("experiments"));
+  console.log("🚀 ~ onRequest ~ env:", env);
 
   // Uncomment below for KV-based experiments
   const experiments = [];
