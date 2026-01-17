@@ -21,12 +21,23 @@
 </html>
 
 <script is:inline defer>
-  const getCookie = (experimentName) => {
+  const getCookieVariants = () => {
     const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${`experiment-${experimentName}`}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
+    const parts = value.split(`; experiments=`);
+    if (parts.length === 2) {
+      const cookieValue = decodeURIComponent(parts.pop().split(";").shift());
+      const variants = {};
+      const pairs = cookieValue.split(",");
+      for (const pair of pairs) {
+        const [exp, val] = pair.split(":");
+        if (exp && val) variants[exp.trim()] = val.trim();
+      }
+      return variants;
+    }
+    return {};
   };
 
+  // All elements with data-experiment attributes
   const allElements = document.querySelectorAll("[data-experiment]");
   const experiments = [...new Set(Array.from(allElements).map((el) => el.dataset.experiment.split(":")[0]))];
 
@@ -45,26 +56,32 @@
     }
   }
 
+  const cookieVariants = getCookieVariants();
+
+  // Determine which variant of experiment to display
   experiments.forEach((experiment) => {
     const elements = document.querySelectorAll(`[data-experiment^="${experiment}:"]`);
     if (elements.length > 0) {
       const availableVariants = Array.from(elements).map((el) => el.dataset.experiment.split(":")[1]);
+
       let variant = urlVariants[experiment];
       if (variant && !availableVariants.includes(variant)) {
-        variant = null;
+        variant = null; // Invalid URL variant
       }
-      let shouldAddMeta = !!variant;
+      let shouldAddMeta = false;
 
       if (!variant) {
-        const cookieVariant = getCookie(experiment);
+        // No URL variant, check cookie
+        const cookieVariant = cookieVariants[experiment];
         if (cookieVariant && availableVariants.includes(cookieVariant)) {
           variant = cookieVariant;
           shouldAddMeta = true;
         } else {
-          variant = availableVariants[0];
+          variant = availableVariants[0]; // First available
         }
       }
 
+      // Add meta tag for collector
       if (shouldAddMeta) {
         const meta = document.createElement("meta");
         meta.name = "experiment";
@@ -72,6 +89,7 @@
         document.head.appendChild(meta);
       }
 
+      // Removing hidden attribute from selected variant
       const component = document.querySelector(`[data-experiment="${experiment}:${variant}"]`);
       if (component) component.hidden = false;
     }
