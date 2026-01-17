@@ -1,5 +1,5 @@
 export async function onRequest(context) {
-  const { request } = context;
+  const { request, env } = context;
 
   // Uncomment below for KV-based experiments
   const experiments = (await env.EXPERIMENTS.get("experiments")) ? JSON.parse(await env.EXPERIMENTS.get("experiments")) : [];
