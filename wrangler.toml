@@ -1,10 +1,5 @@
 name = "astro-ab-test"
 compatibility_date = "2026-01-13"
 
-
-[[kv_namespaces]]
-binding = "EXPERIMENTS"
-id = "0308cc67e6cf4849ba6949edaf7fbd7a"
-
 [assets]
 directory = "./dist"

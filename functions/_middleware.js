@@ -1,37 +1,27 @@
 export async function onRequest(context) {
   const { request, env } = context;
+  console.log("🚀 ~ onRequest ~ env:", env);
+  console.log("🚀 ~ onRequest ~ env.EXPERIMENTS:", env.EXPERIMENTS);
+  console.log(`🚀 ~ onRequest ~ env.EXPERIMENTS.get("experiments"):`, env.EXPERIMENTS.get("experiments"));
 
-  // Default experiments
-  let experiments = { landing: "a", cta: "y" };
-
-  // Try to load from KV if available
-  if (env.EXPERIMENTS) {
-    try {
-      const kvData = await env.EXPERIMENTS.get("experiments");
-      if (kvData) {
-        const parsed = JSON.parse(kvData);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          experiments = {};
-          for (const pair of parsed) {
-            const [exp, val] = pair.split(":");
-            if (exp && val) experiments[exp.trim()] = val.trim();
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error loading experiments from KV:", error);
-    }
-  }
+  // Uncomment below for KV-based experiments
+  const experiments = [];
 
   let response = await context.next();
 
+  if (!experiments.lenght) return response;
   // Clone response to modify headers
   response = new Response(response.body, response);
 
-  // Set individual experiment cookies
-  for (const [exp, val] of Object.entries(experiments)) {
-    const cookieName = `experiment-${exp}`;
-    response.headers.append("Set-Cookie", `${cookieName}=${val}; Path=/`);
+  // Check and update experiments cookie if needed
+  const expString = experiments.join(",");
+  const currentCookie = request.headers.get("cookie");
+  const existingExp = currentCookie
+    ?.split(";")
+    .find((c) => c.trim().startsWith("experiments="))
+    ?.split("=")[1];
+  if (existingExp !== expString) {
+    response.headers.append("Set-Cookie", `experiments=${expString}; Path=/`);
   }
 
   return response;
