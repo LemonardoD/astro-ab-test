@@ -49,7 +49,8 @@ export async function onRequest({ request, env, next }) {
   if (!keys.length) return next();
 
   const configs = await env.EXPERIMENTS.get(keys.map((k) => k.name));
-  const existingCookiesMap = parseExperimentsCookie(request.headers.get("Cookie"));
+  const cookieHeader = request.headers.get("Cookie") ?? "";
+  const existingCookiesMap = parseExperimentsCookie(cookieHeader);
   let mutated = false;
 
   for (const [name, raw] of configs) {
