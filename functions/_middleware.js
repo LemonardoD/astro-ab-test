@@ -9,6 +9,20 @@ function parseCookie(cookieString) {
   }
   return cookies;
 }
+
+function getVariant(variants) {
+  const total = Object.values(variants).reduce((sum, pct) => sum + pct, 0);
+  const random = Math.random() * total;
+  let cumulative = 0;
+  for (const [variant, pct] of Object.entries(variants)) {
+    cumulative += pct;
+    if (random < cumulative) {
+      return variant;
+    }
+  }
+  return Object.keys(variants)[0]; // fallback
+}
+
 export async function onRequest(context) {
   const { request, env, next } = context;
 
