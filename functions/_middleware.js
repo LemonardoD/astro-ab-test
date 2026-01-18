@@ -1,74 +1,98 @@
-function parseCookie(cookieString) {
-  const cookies = {};
-  if (!cookieString) return cookies;
-  for (const cookie of cookieString.split(";")) {
-    const [name, value] = cookie.trim().split("=");
-    if (name && value) {
-      cookies[name] = value;
-    }
+function seededRandom(seed) {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
   }
-  return cookies;
+  return (h >>> 0) / 4294967296;
 }
 
-function getVariant(variants) {
-  const total = Object.values(variants).reduce((sum, pct) => sum + pct, 0);
-  const random = Math.random() * total;
-  let cumulative = 0;
-  for (const [variant, pct] of Object.entries(variants)) {
-    cumulative += pct;
-    if (random < cumulative) {
-      return variant;
-    }
+function pickWeightedVariant(variants, request) {
+  const total = variants.reduce((s, v) => s + v.probability, 0);
+  if (total <= 0) return null;
+
+  const seed = request.headers.get("CF-Connecting-IP") + request.headers.get("User-Agent");
+
+  const rand = seededRandom(seed) * total;
+
+  let acc = 0;
+  for (const v of variants) {
+    acc += v.probability;
+    if (rand < acc) return v.variant;
   }
-  return Object.keys(variants)[0]; // fallback
+
+  return variants[variants.length - 1]?.variant ?? null;
+}
+
+function parseExperimentsCookie(cookieHeader) {
+  const map = new Map();
+
+  const cookie = cookieHeader
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith("experiments="));
+
+  if (!cookie) return map;
+
+  const value = cookie.replace("experiments=", "");
+  if (!value) return map;
+
+  for (const pair of value.split(",")) {
+    const [key, variant] = pair.split(":");
+    if (key && variant) map.set(key, variant);
+  }
+
+  return map;
 }
 
 export async function onRequest(context) {
   const { request, env, next } = context;
 
-  const { keys } = await env.EXPERIMENTS.list();
-  if (!keys.length) return next();
+  const { keys: experimentNames } = await env.EXPERIMENTS.list();
+  if (!experimentNames.length) return next();
 
-  const keyNames = keys.map(({ name }) => name);
-  const values = await env.EXPERIMENTS.get(keyNames);
-  let experimentConfig = {};
-  for (const keyName of keyNames) {
-    if (values[keyName]) {
-      try {
-        experimentConfig[keyName] = JSON.parse(values[keyName]);
-      } catch (e) {}
+  const names = experimentNames.map(({ name }) => name);
+  const experimetns = await env.EXPERIMENTS.get(names);
+
+  let mutated = false;
+
+  const cookieHeader = request.headers.get("Cookie") ?? "";
+  const existingCookiesMap = parseExperimentsCookie(cookieHeader);
+
+  for (const [name, rawConfig] of experimetns.entries()) {
+    if (!rawConfig) continue;
+
+    let variantsConfig;
+    try {
+      variantsConfig = JSON.parse(rawConfig);
+    } catch {
+      continue;
+    }
+
+    const variants = new Set(variantsConfig.map(({ variant }) => variant));
+    const current = existingCookiesMap.get(name);
+
+    // keep valid assignment
+    if (current && variants.has(current)) continue;
+
+    // assign missing or invalid
+    const chosen = pickWeightedVariant(variants, request);
+    if (chosen) {
+      existingCookiesMap.set(name, chosen);
+      mutated = true;
     }
   }
+
+  if (!mutated) return next();
+
   const response = await next();
   const newResponse = new Response(response.body, response);
 
-  const cookies = parseCookie(request.headers.get("Cookie"));
-  const currentExperiments = cookies.experiments ? cookies.experiments.split(",") : [];
-  const experimentMap = {};
-  for (const exp of currentExperiments) {
-    const [key, value] = exp.split(":");
-    if (key && value) {
-      experimentMap[key] = value;
-    }
-  }
+  const cookieValue = Array.from(existingCookiesMap.entries())
+    .map(([name, variant]) => `${name}:${variant}`)
+    .join(",");
 
-  const updatedExperiments = { ...experimentMap };
-  let hasNewAssignment = false;
-
-  // Assign variants for all experiments
-  for (const [expName, expConfig] of Object.entries(experimentConfig)) {
-    if (!(expName in updatedExperiments)) {
-      updatedExperiments[expName] = getVariant(expConfig);
-      hasNewAssignment = true;
-    }
-  }
-
-  if (hasNewAssignment) {
-    const kvString = Object.entries(updatedExperiments)
-      .map(([key, value]) => `${key}:${value}`)
-      .join(",");
-    newResponse.headers.append("Set-Cookie", `experiments=${kvString}; Path=/; SameSite=Lax`);
-  }
+  newResponse.headers.append("Set-Cookie", `experiments=${cookieValue}; Path=/; SameSite=Lax`);
 
   return newResponse;
 }
