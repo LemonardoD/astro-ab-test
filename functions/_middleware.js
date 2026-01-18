@@ -1,5 +1,6 @@
 // Global cache for experiment config
 let experimentConfig = null;
+console.log(22);
 
 function getVariant(variants) {
   const total = Object.values(variants).reduce((sum, pct) => sum + pct, 0);
