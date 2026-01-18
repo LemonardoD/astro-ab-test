@@ -76,7 +76,7 @@ export async function onRequest(context) {
     if (current && variants.has(current)) continue;
 
     // assign missing or invalid
-    const chosen = pickWeightedVariant(variants, request);
+    const chosen = pickWeightedVariant(variantsConfig, request);
     if (chosen) {
       existingCookiesMap.set(name, chosen);
       mutated = true;
@@ -92,7 +92,6 @@ export async function onRequest(context) {
     .map(([name, variant]) => `${name}:${variant}`)
     .join(",");
 
-  newResponse.headers.append("Set-Cookie", `experiments=${cookieValue}; Path=/; SameSite=Lax`);
-
+  newResponse.headers.set("Set-Cookie", `experiments=${cookieValue}; Path=/; SameSite=Lax`);
   return newResponse;
 }
