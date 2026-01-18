@@ -1,7 +1,3 @@
-// Global cache for experiment config
-let experimentConfig = null;
-console.log(22);
-
 function getVariant(variants) {
   const total = Object.values(variants).reduce((sum, pct) => sum + pct, 0);
   const random = Math.random() * total;
@@ -30,29 +26,22 @@ function parseCookie(cookieString) {
 export async function onRequest(context) {
   const { request, env, next } = context;
 
-  // Load experiment config from KV if not cached
-  if (!experimentConfig) {
-    const { keys } = await env.EXPERIMENTS.list();
-    console.log("🚀 ~ onRequest ~ keys:", keys);
-    if (keys.length > 0) {
-      const keyNames = keys.map(({ name }) => name);
-      const values = await env.EXPERIMENTS.get(keyNames);
-      experimentConfig = {};
-      for (const keyName of keyNames) {
-        if (values[keyName]) {
-          try {
-            experimentConfig[keyName] = JSON.parse(values[keyName]);
-          } catch (e) {
-            console.log(e);
-          }
-        }
+  const { keys } = await env.EXPERIMENTS.list();
+  if (!keys.length) return next();
+
+  const keyNames = keys.map(({ name }) => name);
+  const values = await env.EXPERIMENTS.get(keyNames);
+  let experimentConfig = {};
+  for (const keyName of keyNames) {
+    if (values[keyName]) {
+      try {
+        experimentConfig[keyName] = JSON.parse(values[keyName]);
+      } catch (e) {
+        console.log(e);
       }
-    } else {
-      experimentConfig = {}; // empty if no keys
     }
   }
 
-  console.log("🚀 ~ onRequest ~ experimentConfig:", experimentConfig);
   // If no experiments, skip
   if (Object.keys(experimentConfig).length === 0) return next();
 
