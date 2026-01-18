@@ -32,6 +32,7 @@ export async function onRequest(context) {
   // Load experiment config from KV if not cached
   if (!experimentConfig) {
     const { keys } = await env.EXPERIMENTS.list();
+    console.log("🚀 ~ onRequest ~ keys:", keys);
     if (keys.length > 0) {
       const keyNames = keys.map(({ name }) => name);
       const values = await env.EXPERIMENTS.get(keyNames);
@@ -40,7 +41,9 @@ export async function onRequest(context) {
         if (values[keyName]) {
           try {
             experimentConfig[keyName] = JSON.parse(values[keyName]);
-          } catch (e) {}
+          } catch (e) {
+            console.log(e);
+          }
         }
       }
     } else {
@@ -48,6 +51,7 @@ export async function onRequest(context) {
     }
   }
 
+  console.log("🚀 ~ onRequest ~ experimentConfig:", experimentConfig);
   // If no experiments, skip
   if (Object.keys(experimentConfig).length === 0) return next();
 
@@ -80,7 +84,6 @@ export async function onRequest(context) {
     const kvString = Object.entries(updatedExperiments)
       .map(([key, value]) => `${key}:${value}`)
       .join(",");
-    console.log("🚀 ~ onRequest ~ kvString:", kvString);
     newResponse.headers.append("Set-Cookie", `experiments=${kvString}; Path=/; SameSite=Lax`);
   }
 
