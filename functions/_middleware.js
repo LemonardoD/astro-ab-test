@@ -65,6 +65,7 @@ export async function onRequest(context) {
   }
 
   const updatedExperiments = { ...experimentMap };
+  console.log("🚀 ~ onRequest ~ updatedExperiments:", updatedExperiments);
   let hasNewAssignment = false;
 
   // Assign variants for all experiments
@@ -79,6 +80,7 @@ export async function onRequest(context) {
     const kvString = Object.entries(updatedExperiments)
       .map(([key, value]) => `${key}:${value}`)
       .join(",");
+    console.log("🚀 ~ onRequest ~ kvString:", kvString);
     newResponse.headers.append("Set-Cookie", `experiments=${kvString}; Path=/; SameSite=Lax`);
   }
 
