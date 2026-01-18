@@ -1,30 +1,29 @@
-function seededRandom(seed) {
+const seededRandom = (seed) => {
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) {
     h ^= seed.charCodeAt(i);
     h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
   }
   return (h >>> 0) / 4294967296;
-}
+};
 
-function pickWeightedVariant(variants, request) {
-  const total = variants.reduce((s, v) => s + v.probability, 0);
-  if (total <= 0) return null;
+const pickWeightedVariant = (variants, request, name) => {
+  let total = 0;
+  for (const { probability } of variants) total += probability;
+  if (!total) return null;
 
-  const seed = request.headers.get("CF-Connecting-IP") + request.headers.get("User-Agent");
+  const seed = name + request.headers.get("CF-Connecting-IP") + request.headers.get("User-Agent");
 
-  const rand = seededRandom(seed) * total;
+  let random = seededRandom(seed) * total;
 
-  let acc = 0;
-  for (const v of variants) {
-    acc += v.probability;
-    if (rand < acc) return v.variant;
+  for (const { variant, probability } of variants) {
+    if ((random -= probability) < 0) return variant;
   }
 
-  return variants[variants.length - 1]?.variant ?? null;
-}
+  return variants.at(-1)?.variant ?? null;
+};
 
-function parseExperimentsCookie(cookieHeader) {
+const parseExperimentsCookie = (cookieHeader) => {
   const map = new Map();
 
   const cookie = cookieHeader
@@ -43,55 +42,41 @@ function parseExperimentsCookie(cookieHeader) {
   }
 
   return map;
-}
+};
 
-export async function onRequest(context) {
-  const { request, env, next } = context;
+export async function onRequest({ request, env, next }) {
+  const { keys } = await env.EXPERIMENTS.list();
+  if (!keys.length) return next();
 
-  const { keys: experimentNames } = await env.EXPERIMENTS.list();
-  if (!experimentNames.length) return next();
-
-  const names = experimentNames.map(({ name }) => name);
-  const experimetns = await env.EXPERIMENTS.get(names);
-
+  const configs = await env.EXPERIMENTS.get(keys.map((k) => k.name));
+  const existingCookiesMap = parseExperimentsCookie(request.headers.get("Cookie"));
   let mutated = false;
 
-  const cookieHeader = request.headers.get("Cookie") ?? "";
-  const existingCookiesMap = parseExperimentsCookie(cookieHeader);
+  for (const [name, raw] of configs) {
+    if (!raw) continue;
 
-  for (const [name, rawConfig] of experimetns.entries()) {
-    if (!rawConfig) continue;
-
-    let variantsConfig;
+    let variants;
     try {
-      variantsConfig = JSON.parse(rawConfig);
+      variants = JSON.parse(raw);
     } catch {
       continue;
     }
 
-    const variants = new Set(variantsConfig.map(({ variant }) => variant));
     const current = existingCookiesMap.get(name);
+    if (current && variants.some(({ variant }) => variant === current)) continue;
 
-    // keep valid assignment
-    if (current && variants.has(current)) continue;
-
-    // assign missing or invalid
-    const chosen = pickWeightedVariant(variantsConfig, request);
-    if (chosen) {
-      existingCookiesMap.set(name, chosen);
+    const picked = pickWeightedVariant(variants, request, name);
+    if (picked) {
+      existingCookiesMap.set(name, picked);
       mutated = true;
     }
   }
 
   if (!mutated) return next();
 
-  const response = await next();
-  const newResponse = new Response(response.body, response);
+  const res = new Response((await next()).body);
+  const cookieValue = [...existingCookiesMap].map(([name, variant]) => `${name}:${variant}`).join(",");
+  res.headers.set("Set-Cookie", `experiments=${cookieValue}; Path=/; SameSite=Lax`);
 
-  const cookieValue = Array.from(existingCookiesMap.entries())
-    .map(([name, variant]) => `${name}:${variant}`)
-    .join(",");
-
-  newResponse.headers.set("Set-Cookie", `experiments=${cookieValue}; Path=/; SameSite=Lax`);
-  return newResponse;
+  return res;
 }
