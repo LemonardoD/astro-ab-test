@@ -1,36 +1,58 @@
+function parseCookie(cookieString) {
+  const cookies = {};
+  if (!cookieString) return cookies;
+  for (const cookie of cookieString.split(";")) {
+    const [name, value] = cookie.trim().split("=");
+    if (name && value) {
+      cookies[name] = value;
+    }
+  }
+  return cookies;
+}
 export async function onRequest(context) {
-  const { request, env } = context;
+  const { request, env, next } = context;
 
-  // 1. List keys (names only)
   const { keys } = await env.EXPERIMENTS.list();
-  if (!keys.length) {
-    return context.next();
+  if (!keys.length) return next();
+
+  const keyNames = keys.map(({ name }) => name);
+  const values = await env.EXPERIMENTS.get(keyNames);
+  let experimentConfig = {};
+  for (const keyName of keyNames) {
+    if (values[keyName]) {
+      try {
+        experimentConfig[keyName] = JSON.parse(values[keyName]);
+      } catch (e) {}
+    }
   }
-
-  const keyNames = keys.map((k) => k.name);
-
-  // 2. Fetch all values in ONE call
-  const valuesMap = await env.EXPERIMENTS.get(keyNames);
-
-  // 3. Build key:value,key:value
-  const kvString = Array.from(valuesMap.entries())
-    .filter(([, value]) => value !== null)
-    .map(([key, value]) => `${key}:${value}`)
-    .join(",");
-
-  if (!kvString) {
-    return context.next();
-  }
-
-  // 4. Continue request
-  const response = await context.next();
+  const response = await next();
   const newResponse = new Response(response.body, response);
 
-  // 5. Only set cookie if changed
-  const cookieHeader = request.headers.get("Cookie") ?? "";
-  const hasCookie = cookieHeader.includes(`experiments=${kvString}`);
+  const cookies = parseCookie(request.headers.get("Cookie"));
+  const currentExperiments = cookies.experiments ? cookies.experiments.split(",") : [];
+  const experimentMap = {};
+  for (const exp of currentExperiments) {
+    const [key, value] = exp.split(":");
+    if (key && value) {
+      experimentMap[key] = value;
+    }
+  }
 
-  if (!hasCookie) {
+  const updatedExperiments = { ...experimentMap };
+  let hasNewAssignment = false;
+
+  // Assign variants for all experiments
+  for (const [expName, expConfig] of Object.entries(experimentConfig)) {
+    if (!(expName in updatedExperiments)) {
+      updatedExperiments[expName] = getVariant(expConfig);
+      hasNewAssignment = true;
+    }
+  }
+
+  if (hasNewAssignment) {
+    const kvString = Object.entries(updatedExperiments)
+      .map(([key, value]) => `${key}:${value}`)
+      .join(",");
     newResponse.headers.append("Set-Cookie", `experiments=${kvString}; Path=/; SameSite=Lax`);
   }
 
