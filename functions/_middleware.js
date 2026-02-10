@@ -45,39 +45,25 @@ const parseExperimentsCookie = (cookieHeader) => {
 };
 
 export async function onRequest({ request, env, next }) {
-  const { keys } = await env.EXPERIMENTS.list();
-  if (!keys.length) return next();
+  const countryCode = request.cf?.country || request.headers.get("CF-IPCountry");
+  const cookieHeader = request.headers.get("Cookie") || "";
 
-  const configs = await env.EXPERIMENTS.get(keys.map((k) => k.name));
-  const cookieHeader = request.headers.get("Cookie") ?? "";
-  const existingCookiesMap = parseExperimentsCookie(cookieHeader);
-  let mutated = false;
+  const originalResponse = await next();
 
-  for (const [name, raw] of configs) {
-    if (!raw) continue;
+  const cookieCountryCode = cookieHeader
+    .split("; ")
+    .find((row) => row.startsWith("countryCode="))
+    ?.split("=")[1];
 
-    let variants;
-    try {
-      variants = JSON.parse(raw);
-    } catch {
-      continue;
-    }
+  const response = new Response(originalResponse.body, originalResponse);
 
-    const current = existingCookiesMap.get(name);
-    if (current && variants.some(({ variant }) => variant === current)) continue;
-
-    const picked = pickWeightedVariant(variants, request, name);
-    if (picked) {
-      existingCookiesMap.set(name, picked);
-      mutated = true;
-    }
+  if (countryCode && cookieCountryCode !== countryCode) {
+    response.headers.append("Set-Cookie", `countryCode=${countryCode}; Path=/; SameSite=Lax;`);
   }
 
-  if (!mutated) return next();
+  response.headers.append("Set-Cookie", `deqw=${321}; Path=/; SameSite=Lax;`);
 
-  const res = new Response((await next()).body);
-  const cookieValue = [...existingCookiesMap].map(([name, variant]) => `${name}:${variant}`).join(",");
-  res.headers.set("Set-Cookie", `experiments=${cookieValue}; Path=/; SameSite=Lax`);
+  response.headers.set("Set-Cookie", `setted=213ewqdsc; Path=/; SameSite=Lax;`);
 
-  return res;
+  return response;
 }
