@@ -46,6 +46,7 @@ const parseExperimentsCookie = (cookieHeader) => {
 
 export async function onRequest({ request, env, next }) {
   const countryCode = request.cf?.country || request.headers.get("CF-IPCountry");
+  console.log("🚀 ~ onRequest ~ countryCode:", countryCode);
   const cookieHeader = request.headers.get("Cookie") || "";
 
   const originalResponse = await next();
@@ -57,13 +58,7 @@ export async function onRequest({ request, env, next }) {
 
   const response = new Response(originalResponse.body, originalResponse);
 
-  if (countryCode && cookieCountryCode !== countryCode) {
-    response.headers.append("Set-Cookie", `countryCode=${countryCode}; Path=/; SameSite=Lax;`);
-  }
-
-  response.headers.append("Set-Cookie", `deqw=${321}; Path=/; SameSite=Lax;`);
-
-  response.headers.set("Set-Cookie", `setted=213ewqdsc; Path=/; SameSite=Lax;`);
+  response.headers.set("Set-Cookie", `countryCode=${countryCode}; Path=/; SameSite=Lax;`);
 
   return response;
 }
