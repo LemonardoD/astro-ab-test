@@ -1,0 +1,8 @@
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://consent.cookiebot.com https://clientcdn.pushengage.com https://static.cloudflareinsights.com https://code.jivosite.com https://track-traffic.site https://fpnpmcdn.net/v3/F0LH0cZ8chxrGGy2KwHz/loader_v3.12.6.js; style-src 'self' 'unsafe-inline' https://clientcdn.pushengage.com https://code.jivosite.com; font-src 'self'; img-src 'self' https: data:; media-src 'self' https:; connect-src 'self' https: wss://*.jivosite.com https://code.jivosite.com https://track-traffic.site; frame-src https://consentcdn.cookiebot.com; frame-ancestors 'self'
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Cross-Origin-Opener-Policy: same-origin

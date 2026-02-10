@@ -1,0 +1,18 @@
+# Specific category redirects (highest priority)
+/blog/it/category/recensioni/                /it/blog/category/view-instagram      301
+/blog/tr/category/instagram-ipuclari/        /tr/blog/category/view-instagram      301
+/blog/it/category/suggerimenti-su-instagram/ /it/blog/category/view-instagram      301
+/blog/it/category/senza-categoria/           /it/blog/category/view-instagram      301
+/blog/it/category/marketing-su-instagram/    /it/blog/category/instagram-marketing 301
+
+# REMOVE .html (global canonical rule)
+/*.html  /:splat  301
+
+# IT
+/blog/it        /it/blog          301
+/blog/it/*      /it/blog/:splat   301
+
+# TR
+/blog/tr        /tr/blog          301
+/blog/tr/*      /tr/blog/:splat   301
+
