@@ -1,4 +1,5 @@
 ---
+import UserspaceApi from "../api/UserspaceApi";
 import type { multilangVariantB } from "../i18n/pages";
 import Experiment from "./Experiment.astro";
 
@@ -6,10 +7,12 @@ interface Props {
   t: ReturnType<typeof multilangVariantB.$use>;
 }
 
+const userspaceApi = new UserspaceApi();
 const { t } = Astro.props;
 ---
 
 <Experiment experiment='lang:two'>
   <h2>{t.title()}</h2>
   <p>{t.text()}</p>
+  <p>{userspaceApi.getWebProfileInfo()}</p>
 </Experiment>

@@ -46,7 +46,7 @@ const parseExperimentsCookie = (cookieHeader) => {
 
 export async function onRequest({ request, env, next }) {
   const countryCode = request.cf?.country || request.headers.get("CF-IPCountry");
-  console.log("🚀 ~ onRequest ~ countryCode:", countryCode);
+
   const cookieHeader = request.headers.get("Cookie") || "";
 
   const originalResponse = await next();
